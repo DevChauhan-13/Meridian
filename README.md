@@ -1,123 +1,88 @@
-# Portfolio Optimization & Backtesting Framework
+# MERIDIAN — Multi-Asset Portfolio Optimization Platform
 
-This project implements a quantitative portfolio optimization and backtesting framework to analyze how asset universe size impacts diversification, risk, and performance. We compare a **10-asset traditional portfolio** with a **12-asset extended portfolio** that includes higher-volatility assets.
-
----
-
-## 📌 Problem Statement
-
-The objective is to evaluate portfolio construction techniques under different asset universes and study their behavior in terms of risk-adjusted returns, drawdowns, and robustness during volatile periods.
+Institutional-grade cross-asset portfolio optimization and risk engine built on modern portfolio theory (Markowitz), minimum variance risk minimization, and equal risk parity algorithms.
 
 ---
 
-## 📊 Data Description
+## 🏛️ Architecture Overview
 
-- Input data consists of historical price-related information for multiple assets.
-- Each dataset includes:
-  - Open, High, Low prices
-  - Percentage returns
-  - Volume
-  - Timestamps
-- Two portfolio universes are constructed:
-  - **10-Asset Portfolio** (traditional assets only)
-  - **12-Asset Portfolio** (traditional + additional assets)
-
----
-
-## 🛠 Data Preprocessing
-
-- Timestamp alignment across assets
-- Handling missing values
-- Computation of daily log returns
-- Alignment of return series for multi-asset analysis
-- Visualization of:
-  - Return distributions
-  - Rolling volatility
-  - Asset correlations
-
----
-
-## 🧠 Model Overview
-
-The following portfolio construction strategies are implemented:
-
-- **Minimum Variance Portfolio**
-- **Markowitz Mean-Variance Optimization (Maximum Sharpe)**
-- **Risk Parity Portfolio**
-
-For each portfolio universe, the annualized mean return vector (μ) and covariance matrix (Σ) are estimated and used as model inputs.
-
----
-
-## ⚙️ Backtesting Framework
-
-- Fixed-weight portfolios with periodic rebalancing
-- Identical backtest periods for fair comparison
-- Portfolio value computed using weighted returns
-- Transaction costs assumed to be zero (unless specified)
+```
+rp/
+├── backend/                  # FastAPI Quantitative Backend
+│   ├── data/
+│   │   ├── loader.py         # yfinance live fetch + SQLite cache + CSV fallback
+│   │   └── features.py       # Returns, log returns, rolling vol & correlations
+│   ├── engine/
+│   │   ├── optimize.py       # SLSQP: MinVar, Markowitz (Max Sharpe), Risk Parity
+│   │   ├── backtest.py       # Fixed-weights daily rebalancing simulation & metrics
+│   │   └── risk.py           # Marginal risk contributions & turnover estimation
+│   ├── api/
+│   │   ├── routes/           # /assets, /prices, /optimize, /backtest, /risk-report, /compare
+│   │   └── models.py         # Pydantic schemas
+│   ├── db/
+│   │   └── cache.py          # SQLite TTL price cache
+│   ├── Datasets/             # Fallback historical data (12 assets)
+│   ├── Dockerfile
+│   ├── main.py
+│   └── requirements.txt
+│
+├── frontend/                 # React + TypeScript + Vanilla CSS (DESIGN.md)
+│   ├── src/
+│   │   ├── components/       # GradientMesh, NavBar, KpiCard, Charts, Heatmap, Footer
+│   │   ├── pages/            # BuilderPage, DashboardPage, AnalyzePage, ComparePage
+│   │   ├── styles/           # index.css (complete DESIGN.md tokens & ss01/tnum)
+│   │   ├── api/client.ts     # Typed API client
+│   │   └── App.tsx
+│   ├── vite.config.ts        # Vite dev server with /api proxy
+│   └── package.json
+│
+├── docker-compose.yml        # Multi-service container orchestration
+└── DESIGN.md                 # Design system guidelines
+```
 
 ---
 
-## 📈 Evaluation Metrics
+## 🚀 Quick Start
 
-Performance is evaluated using:
+### 1. Run with Docker Compose (Recommended)
+```bash
+docker-compose up --build
+```
+- Frontend: `http://localhost:5173`
+- Backend API Docs (Swagger): `http://localhost:8000/docs`
 
-- Annualized Sharpe Ratio
-- Sortino Ratio
-- Volatility
-- Maximum Drawdown
-- Correlation Heatmap
-- Stress-test performance during high-volatility regimes
-- Rolling Sharpe Ratio
+### 2. Run Locally
 
----
+#### Backend (FastAPI)
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload --port 8000
+```
 
-## 📉 Results & Visualization
-
-The framework generates:
-
-- Equity curves
-- Drawdown curves
-- KPI summary tables
-- Rolling performance metrics
-
-These results enable direct comparison between different strategies and asset universes.
-
----
-
-## ✅ Key Findings
-
-- Larger asset universes improve diversification but may increase volatility.
-- Risk Parity offers better drawdown control in stressed markets.
-- Mean-Variance portfolios are sensitive to covariance estimation.
-- Asset selection plays a critical role in portfolio robustness.
+#### Frontend (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open `http://localhost:5173`.
 
 ---
 
-## 🚀 Possible Improvements
+## 📊 Features & Models
 
-- Incorporating transaction costs and slippage
-- Dynamic or regime-based rebalancing
-- Robust covariance estimation techniques
-- Extension to factor-based or ML-driven strategies
-
----
-
-## 📂 Project Structure
-
-
----
-
-## 🧾 Requirements
-
-- Python 3.x
-- NumPy
-- Pandas
-- Matplotlib / Seaborn
-- SciPy
-
----
-
-## 📜 License
-
-This project is for academic and educational purposes.
+1. **Portfolio Optimization**:
+   - **Minimum Variance**: Minimizes portfolio volatility $w^T \Sigma w$.
+   - **Markowitz Mean-Variance**: Maximizes Sharpe ratio $\frac{w^T \mu}{\sqrt{w^T \Sigma w}}$.
+   - **Equal Risk Parity**: Solves for weights where every asset contributes equally to total portfolio risk.
+2. **Backtesting & Metrics**:
+   - Daily rebalancing with customizable transaction cost / slippage.
+   - Cumulative Wealth Trajectory, Peak-to-Trough Drawdowns, and 63-day Rolling Sharpe.
+   - Sharpe, Sortino, CAGR, Annualized Volatility, and Max Drawdown.
+3. **Interactive Correlation Matrix**:
+   - Custom CSS-grid heatmap dynamically mapping Pearson return correlations from ruby (-1.0) to electric indigo (+1.0).
+4. **"Analyze My Portfolio" Mode**:
+   - User-defined custom weights with automatic normalization and live stress testing.
+5. **Universe Comparison**:
+   - Side-by-side comparative backtesting (e.g. 10-Asset Traditional vs 12-Asset with Crypto).
