@@ -23,14 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(assets.router, prefix="/assets", tags=["Assets"])
-app.include_router(prices.router, prefix="/prices", tags=["Prices"])
-app.include_router(optimize.router, prefix="/optimize", tags=["Optimization"])
-app.include_router(backtest.router, prefix="/backtest", tags=["Backtest"])
-app.include_router(risk_report.router, prefix="/risk-report", tags=["Risk"])
-app.include_router(compare.router, prefix="/compare", tags=["Comparison"])
+# Include routes with and without /api prefix for Vercel service rewrite compatibility
+for prefix, router, tag in [
+    ("/assets", assets.router, "Assets"),
+    ("/prices", prices.router, "Prices"),
+    ("/optimize", optimize.router, "Optimization"),
+    ("/backtest", backtest.router, "Backtest"),
+    ("/risk-report", risk_report.router, "Risk"),
+    ("/compare", compare.router, "Comparison"),
+]:
+    app.include_router(router, prefix=prefix, tags=[tag])
+    app.include_router(router, prefix=f"/api{prefix}", tags=[tag])
 
 
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
 def health_check():
     return {"status": "ok", "service": "portfolio-backend"}
+
